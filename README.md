@@ -17,7 +17,7 @@ Set these before starting the backend. Replace values as needed for your machine
 ```powershell
 $env:EDUEVAL_DB_URL="jdbc:postgresql://localhost:5432/edueval"
 $env:EDUEVAL_DB_USERNAME="postgres"
-$env:EDUEVAL_DB_PASSWORD="tejas"
+$env:EDUEVAL_DB_PASSWORD="keep-your-password"
 $env:EDUEVAL_JWT_SECRET="change-this-to-a-long-random-secret-at-least-32-characters"
 $env:EDUEVAL_AI_BASE_URL="http://localhost:8000"
 ```
