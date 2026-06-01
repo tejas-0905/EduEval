@@ -1,20 +1,24 @@
 spring:
+  config:
+    import:
+      - optional:file:.env[.properties]
+      - optional:file:../.env[.properties]
   datasource:
-    url: jdbc:postgresql://localhost:5432/edueval
-    username: postgres
-    password: tejas
+    url: ${EDUEVAL_DB_URL:jdbc:postgresql://localhost:5432/edueval}
+    username: ${EDUEVAL_DB_USERNAME:postgres}
+    password: ${EDUEVAL_DB_PASSWORD:}
     driver-class-name: org.postgresql.Driver
   web:
     resources:
-      static-locations: file:./uploads/
+      static-locations: file:${EDUEVAL_UPLOAD_DIR:./uploads}/
   jpa:
     hibernate:
-      ddl-auto: update
-    show-sql: true
+      ddl-auto: ${EDUEVAL_JPA_DDL_AUTO:update}
+    show-sql: ${EDUEVAL_SHOW_SQL:false}
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-        format_sql: true
+        format_sql: ${EDUEVAL_FORMAT_SQL:false}
 
   servlet:
     multipart:
@@ -23,23 +27,23 @@ spring:
       max-request-size: 25MB
 
 server:
-  port: 8080
+  port: ${PORT:8080}
 
 app:
   jwt:
-    secret: edueval-super-secret-key-change-this-in-production-minimum-256-bits
-    expiration-ms: 86400000
+    secret: ${EDUEVAL_JWT_SECRET}
+    expiration-ms: ${EDUEVAL_JWT_EXPIRATION_MS:86400000}
 
   ai-engine:
-    base-url: http://localhost:8000
+    base-url: ${EDUEVAL_AI_BASE_URL:http://localhost:8000}
 
   file-storage:
-    upload-dir: ./uploads
+    upload-dir: ${EDUEVAL_UPLOAD_DIR:./uploads}
 
 logging:
   level:
-    com.edueval: DEBUG
-    org.springframework.security: DEBUG
+    com.edueval: ${EDUEVAL_LOG_LEVEL:INFO}
+    org.springframework.security: ${EDUEVAL_SECURITY_LOG_LEVEL:WARN}
 
 
 
