@@ -32,6 +32,13 @@ pip install -r requirements.txt
 python -m uvicorn main:app --host 127.0.0.1 --port 8000
 ```
 
+Image submissions need the Tesseract OCR desktop app in addition to the Python
+packages. On Windows, install Tesseract and either add it to `PATH` or set:
+
+```powershell
+$env:EDUEVAL_TESSERACT_CMD="C:\Program Files\Tesseract-OCR\tesseract.exe"
+```
+
 ### 2. Spring Boot backend
 
 ```powershell

@@ -3,6 +3,7 @@ from __future__ import annotations
 import math
 import os
 import re
+import shutil
 import string
 from collections import Counter
 from pathlib import Path
@@ -17,6 +18,11 @@ PROJECT_ROOT = APP_DIR.parent
 DEFAULT_UPLOAD_ROOT = PROJECT_ROOT / "edueval-backend" / "uploads"
 UPLOAD_ROOT = Path(os.getenv("EDUEVAL_UPLOAD_ROOT", DEFAULT_UPLOAD_ROOT)).resolve()
 MAX_PDF_PAGES = int(os.getenv("EDUEVAL_MAX_PDF_PAGES", "8"))
+TESSERACT_CMD = os.getenv("EDUEVAL_TESSERACT_CMD", "tesseract")
+WINDOWS_TESSERACT_PATHS = [
+    Path(os.getenv("ProgramFiles", r"C:\Program Files")) / "Tesseract-OCR" / "tesseract.exe",
+    Path(os.getenv("ProgramFiles(x86)", r"C:\Program Files (x86)")) / "Tesseract-OCR" / "tesseract.exe",
+]
 SCORING_WEIGHTS = {
     "keyword_score": 0.40,
     "semantic_score": 0.35,
@@ -61,10 +67,7 @@ def evaluate(payload: EvaluationRequest) -> dict[str, Any]:
 
     student_text = extract_text_from_upload(payload.file_url)
     if not student_text:
-        raise HTTPException(
-            status_code=400,
-            detail="Could not extract readable text from the submitted answer sheet.",
-        )
+        return unreadable_submission_result(payload)
 
     feedback = build_feedback(model_text, student_text)
     scores = feedback["score_breakdown"]
@@ -115,6 +118,47 @@ def extract_text_from_upload(relative_path: str) -> str:
     raise HTTPException(status_code=400, detail=f"Unsupported file type: {suffix}")
 
 
+def unreadable_submission_result(payload: EvaluationRequest) -> dict[str, Any]:
+    feedback = {
+        "error": "Could not extract readable text from the submitted answer sheet.",
+        "keyword_analysis": {
+            "covered": [],
+            "missing": [],
+        },
+        "sentence_analysis": {
+            "missing_points": [],
+            "additional_content": [],
+        },
+        "score_breakdown": {
+            "keyword_score": 0.0,
+            "semantic_score": 0.0,
+            "sentence_score": 0.0,
+            "length_score": 0.0,
+        },
+        "word_count_model": 0,
+        "word_count_student": 0,
+        "extracted_student_answer": "",
+        "scoring_weights": SCORING_WEIGHTS,
+        "mark_calculation": {
+            "weighted_score": 0.0,
+            "total_marks": payload.total_marks,
+            "awarded_marks": 0.0,
+            "formula": "marks = 0 when no readable answer text can be extracted",
+            "basis": [
+                "No readable text was extracted from the submitted answer sheet.",
+                "Ask the student to upload a clearer scan, PDF, or typed answer.",
+            ],
+        },
+    }
+
+    return {
+        "submission_id": payload.submission_id,
+        "ai_marks": 0.0,
+        "ai_confidence": 0.1,
+        "feedback": feedback,
+    }
+
+
 def safe_upload_path(relative_path: str) -> Path:
     cleaned = relative_path.replace("\\", "/").lstrip("/")
     file_path = (UPLOAD_ROOT / cleaned).resolve()
@@ -154,6 +198,18 @@ def extract_image_text(file_path: Path) -> str:
             detail="Install pillow and pytesseract to read image submissions.",
         ) from exc
 
+    tesseract_cmd = resolve_tesseract_cmd()
+    if not tesseract_cmd:
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "Image OCR is unavailable because Tesseract OCR is not installed "
+                "or is not in PATH. Install Tesseract or set EDUEVAL_TESSERACT_CMD."
+            ),
+        )
+
+    pytesseract.pytesseract.tesseract_cmd = tesseract_cmd
+
     try:
         return normalize_space(pytesseract.image_to_string(Image.open(file_path)))
     except Exception as exc:
@@ -161,6 +217,17 @@ def extract_image_text(file_path: Path) -> str:
             status_code=500,
             detail="Image OCR failed. Make sure the Tesseract OCR app is installed.",
         ) from exc
+
+
+def resolve_tesseract_cmd() -> str | None:
+    if shutil.which(TESSERACT_CMD) or Path(TESSERACT_CMD).exists():
+        return TESSERACT_CMD
+
+    for candidate in WINDOWS_TESSERACT_PATHS:
+        if candidate.exists():
+            return str(candidate)
+
+    return None
 
 
 def build_feedback(model_answer: str, student_answer: str) -> dict[str, Any]:

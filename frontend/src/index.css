@@ -235,6 +235,7 @@ a:hover { text-decoration: underline; }
 
 .exam-card-header { display: flex; justify-content: space-between; align-items: flex-start; }
 .exam-card-header h4 { font-size: 0.95rem; font-weight: 600; }
+.exam-card-tools { display: flex; align-items: center; gap: 0.35rem; }
 
 .deadline-badge {
   font-size: 0.72rem;

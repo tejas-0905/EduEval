@@ -4,11 +4,14 @@ import com.edueval.dto.request.CreateExamRequest;
 import com.edueval.dto.request.UpdateExamRequest;
 import com.edueval.dto.response.ExamResponse;
 import com.edueval.entity.Classroom;
+import com.edueval.entity.Evaluation;
 import com.edueval.entity.Exam;
+import com.edueval.entity.Submission;
 import com.edueval.entity.User;
 import com.edueval.exception.ResourceNotFoundException;
 import com.edueval.exception.UnauthorizedActionException;
 import com.edueval.repository.ClassroomRepository;
+import com.edueval.repository.EvaluationRepository;
 import com.edueval.repository.ExamRepository;
 import com.edueval.repository.SubmissionRepository;
 import com.edueval.repository.UserRepository;
@@ -28,6 +31,7 @@ public class ExamService {
     private final ExamRepository examRepository;
     private final ClassroomRepository classroomRepository;
     private final SubmissionRepository submissionRepository;
+    private final EvaluationRepository evaluationRepository;
     private final UserRepository userRepository;
 
     // ── Teacher ──────────────────────────────────────────────────────────────
@@ -67,6 +71,10 @@ public class ExamService {
     public void deleteExam(UUID examId) {
         Exam exam = findById(examId);
         requireClassroomOwnership(exam.getClassroom());
+        List<Evaluation> evaluations = evaluationRepository.findByExamId(examId);
+        List<Submission> submissions = submissionRepository.findByExam(exam);
+        evaluationRepository.deleteAll(evaluations);
+        submissionRepository.deleteAll(submissions);
         examRepository.delete(exam);
     }
 

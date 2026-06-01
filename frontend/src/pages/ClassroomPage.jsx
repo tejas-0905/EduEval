@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/useAuth';
-import { Plus, Clock, Users, FileText } from 'lucide-react';
+import { Plus, Clock, Users, FileText, Trash2 } from 'lucide-react';
 
 export default function ClassroomPage() {
   const { id } = useParams();
@@ -39,6 +39,22 @@ export default function ClassroomPage() {
       navigate(`/teacher/exam/${exam.id}/submissions`);
     } else {
       navigate(`/student/exam/${exam.id}/submit`);
+    }
+  };
+
+  const deleteExam = async (exam) => {
+    const warning = exam.submissionCount > 0
+      ? `Remove "${exam.title}" and its ${exam.submissionCount} submission${exam.submissionCount !== 1 ? 's' : ''}?`
+      : `Remove "${exam.title}"?`;
+
+    if (!confirm(warning)) return;
+
+    try {
+      await api.delete(`/api/teacher/exams/${exam.id}`);
+      toast.success('Exam removed');
+      fetchData();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to remove exam');
     }
   };
 
@@ -81,9 +97,20 @@ export default function ClassroomPage() {
               <div key={exam.id} className={`exam-card ${past ? 'past' : ''}`}>
                 <div className="exam-card-header">
                   <h4>{exam.title}</h4>
-                  <span className={`deadline-badge ${past ? 'past' : 'active'}`}>
-                    {past ? 'Closed' : 'Open'}
-                  </span>
+                  <div className="exam-card-tools">
+                    <span className={`deadline-badge ${past ? 'past' : 'active'}`}>
+                      {past ? 'Closed' : 'Open'}
+                    </span>
+                    {isTeacher && (
+                      <button
+                        className="btn-icon danger"
+                        title="Remove exam"
+                        onClick={() => deleteExam(exam)}
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 <div className="exam-meta">
