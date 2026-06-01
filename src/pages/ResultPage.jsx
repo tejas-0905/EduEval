@@ -90,7 +90,7 @@ export default function ResultPage() {
         feedbackJson={evaluation.aiFeedbackJson}
         aiMarks={evaluation.aiMarks}
         teacherMarks={evaluation.teacherMarks}
-        totalMarks={submission.totalMarks}
+        totalMarks={evaluation.totalMarks}
         confidence={evaluation.aiConfidence}
       />
     </div>
