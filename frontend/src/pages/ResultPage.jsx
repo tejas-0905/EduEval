@@ -122,14 +122,16 @@ export default function ResultPage() {
             </div>
           )}
 
-      {/* Main feedback */}
-      <FeedbackCard
-        feedbackJson={evaluation.aiFeedbackJson}
-        aiMarks={evaluation.aiMarks}
-        teacherMarks={evaluation.teacherMarks}
-        totalMarks={evaluation.totalMarks}
-        confidence={evaluation.aiConfidence}
-      />
+          {/* Main feedback */}
+          <FeedbackCard
+            feedbackJson={evaluation.aiFeedbackJson}
+            aiMarks={evaluation.aiMarks}
+            teacherMarks={evaluation.teacherMarks}
+            totalMarks={evaluation.totalMarks}
+            confidence={evaluation.aiConfidence}
+          />
+        </>
+      )}
     </div>
   );
 }

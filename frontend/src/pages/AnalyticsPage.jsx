@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import toast from 'react-hot-toast';
@@ -6,7 +6,7 @@ import { ArrowLeft, Users, FileText, TrendingUp, AlertCircle, Download } from 'l
 import { downloadReport } from '../api/reports';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  LineChart, Line, PieChart, Pie, Cell, Legend
+  PieChart, Pie, Cell, Legend
 } from 'recharts';
 
 const COLORS = ['#4f46e5', '#16a34a', '#d97706', '#dc2626', '#0891b2'];
@@ -18,9 +18,7 @@ export default function AnalyticsPage() {
   const [classroom, setClassroom] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => { fetchData(); }, [classroomId]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       const [classRes, analyticsRes] = await Promise.all([
         api.get(`/api/classrooms/${classroomId}`),
@@ -33,7 +31,9 @@ export default function AnalyticsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [classroomId]);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
 
   if (loading) return <div className="loading">Loading analytics...</div>;
   if (!analytics) return <div className="error">No analytics available yet.</div>;
