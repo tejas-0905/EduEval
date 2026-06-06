@@ -33,10 +33,11 @@ public class Exam {
     @Column(nullable = false)
     private LocalDateTime deadline;
 
-    @Column(name = "is_multi_question", nullable = false)
+    @Column(name = "is_multi_question", nullable = false, columnDefinition = "boolean default false")
     @Builder.Default
     private Boolean isMultiQuestion = false;
  
+    @Builder.Default
     @OneToMany(mappedBy = "exam", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @OrderBy("questionNo ASC")
     private List<ExamQuestion> questions = new ArrayList<>();
