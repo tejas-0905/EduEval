@@ -10,6 +10,10 @@ public record CreateExamRequest(
         @Size(max = 200, message = "Title cannot exceed 200 characters")
         String title,
 
+        // The question shown to students — required for single-answer exams,
+        // ignored for multi-question exams (each question carries its own text).
+        String questionText,
+
         // Null/ignored for multi-question exams (total is auto-calculated)
         Integer totalMarks,
 

@@ -8,6 +8,7 @@ public class ExamResponse {
 
     private UUID id;
     private String title;
+    private String questionText;
     private Integer totalMarks;
     private LocalDateTime deadline;
     private String modelAnswerUrl;
@@ -21,13 +22,14 @@ public class ExamResponse {
     private List<QuestionResponse> questions;   // null for single-answer exams
 
     // ── Constructor used by ExamService.toResponse() ──────────────────────────
-    public ExamResponse(UUID id, String title, Integer totalMarks, LocalDateTime deadline,
+    public ExamResponse(UUID id, String title, String questionText, Integer totalMarks, LocalDateTime deadline,
                         String modelAnswerUrl, String modelAnswerText,
                         UUID classroomId, String classroomName, String teacherName,
                         long submissionCount, LocalDateTime createdAt,
                         Boolean isMultiQuestion) {
         this.id = id;
         this.title = title;
+        this.questionText = questionText;
         this.totalMarks = totalMarks;
         this.deadline = deadline;
         this.modelAnswerUrl = modelAnswerUrl;
@@ -46,6 +48,7 @@ public class ExamResponse {
     // ── Getters ───────────────────────────────────────────────────────────────
     public UUID getId()                    { return id; }
     public String getTitle()               { return title; }
+    public String getQuestionText()        { return questionText; }
     public Integer getTotalMarks()         { return totalMarks; }
     public LocalDateTime getDeadline()     { return deadline; }
     public String getModelAnswerUrl()      { return modelAnswerUrl; }
@@ -61,4 +64,5 @@ public class ExamResponse {
     // ── Setters (needed by ExamService.getExamById to attach questions) ───────
     public void setQuestions(List<QuestionResponse> questions) { this.questions = questions; }
     public void setIsMultiQuestion(Boolean isMultiQuestion)    { this.isMultiQuestion = isMultiQuestion; }
+    public void setQuestionText(String questionText)           { this.questionText = questionText; }
 }

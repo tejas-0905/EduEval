@@ -27,6 +27,11 @@ public class Exam {
     @Column(nullable = false)
     private String title;
 
+    // The question text shown to students — only used for single-answer exams.
+    // Null for multi-question exams (each ExamQuestion has its own questionText).
+    @Column(columnDefinition = "TEXT")
+    private String questionText;
+
     @Column(nullable = false)
     private Integer totalMarks;
 
