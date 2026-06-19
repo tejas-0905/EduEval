@@ -26,6 +26,7 @@ public class AnalyticsService {
     private final ExamRepository examRepository;
     private final SubmissionRepository submissionRepository;
     private final EvaluationRepository evaluationRepository;
+    private final QuestionEvaluationRepository questionEvaluationRepository;
     private final UserRepository userRepository;
 
     // ── Teacher: per-exam analytics ──────────────────────────────────────────
@@ -77,13 +78,11 @@ public class AnalyticsService {
         List<Submission> submissions = submissionRepository.findByStudent(student);
 
         return submissions.stream().map(sub -> {
-            var evalOpt = evaluationRepository.findBySubmission(sub);
-
-            Double marks = evalOpt.map(Evaluation::getFinalMarks).orElse(null);
+            Double marks = computeFinalMarks(sub);
             Double percentage = (marks != null)
                     ? (marks / sub.getExam().getTotalMarks()) * 100.0
                     : null;
-            boolean reviewed = evalOpt.map(Evaluation::isReviewed).orElse(false);
+            boolean reviewed = sub.getStatus() == SubmissionStatus.REVIEWED;
 
             return new StudentProgressResponse(
                     sub.getId(),
@@ -102,14 +101,14 @@ public class AnalyticsService {
     // ── Helpers ──────────────────────────────────────────────────────────────
 
     private ExamAnalyticsResponse buildExamAnalytics(Exam exam) {
-        long totalStudents    = classroomMemberRepository.countByClassroom(exam.getClassroom());
-        long submissionCount  = submissionRepository.countByExam(exam);
+        long totalStudents = classroomMemberRepository.countByClassroom(exam.getClassroom());
+        List<Submission> submissions = submissionRepository.findByExam(exam);
+        long submissionCount = submissions.size();
         double submissionRate = totalStudents > 0
                 ? (submissionCount * 100.0 / totalStudents) : 0.0;
 
-        List<Evaluation> evaluations = evaluationRepository.findByExamId(exam.getId());
-        List<Double> allFinalMarks = evaluations.stream()
-                .map(Evaluation::getFinalMarks)
+        List<Double> allFinalMarks = submissions.stream()
+                .map(this::computeFinalMarks)
                 .filter(m -> m != null)
                 .collect(Collectors.toList());
 
@@ -117,11 +116,15 @@ public class AnalyticsService {
         Double highest = allFinalMarks.isEmpty() ? null : allFinalMarks.stream().mapToDouble(d -> d).max().orElse(0);
         Double lowest  = allFinalMarks.isEmpty() ? null : allFinalMarks.stream().mapToDouble(d -> d).min().orElse(0);
 
-        long pendingReview = evaluations.stream()
-                .filter(e -> e.getTeacherMarks() == null && e.getAiMarks() != null)
+        // Read review state straight off Submission.status — works the same
+        // way for both single-answer and multi-question exams, unlike the
+        // old Evaluation-table lookups which were always empty for multi-
+        // question submissions.
+        long reviewed = submissions.stream()
+                .filter(s -> s.getStatus() == SubmissionStatus.REVIEWED)
                 .count();
-        long reviewed = evaluations.stream()
-                .filter(Evaluation::isReviewed)
+        long pendingReview = submissions.stream()
+                .filter(s -> s.getStatus() == SubmissionStatus.AI_EVALUATED)
                 .count();
 
         return new ExamAnalyticsResponse(
@@ -137,6 +140,33 @@ public class AnalyticsService {
                 pendingReview,
                 reviewed
         );
+    }
+
+    // Same aggregation approach as SubmissionService.toResponse(): for multi-
+    // question exams, sum each question's teacher marks (falling back to AI
+    // marks) across that submission's question_evaluations rows. For single-
+    // answer exams, read the legacy Evaluation row's finalMarks. Returns null
+    // until at least one question/the evaluation has been AI-scored.
+    private Double computeFinalMarks(Submission submission) {
+        if (Boolean.TRUE.equals(submission.getExam().getIsMultiQuestion())) {
+            List<QuestionEvaluation> evals =
+                    questionEvaluationRepository.findByQuestionSubmissionSubmissionId(submission.getId());
+
+            boolean anyEvaluated = evals.stream().anyMatch(qe -> qe.getAiMarks() != null);
+            if (evals.isEmpty() || !anyEvaluated) {
+                return null;
+            }
+
+            return evals.stream()
+                    .mapToDouble(qe -> qe.getTeacherMarks() != null
+                            ? qe.getTeacherMarks()
+                            : (qe.getAiMarks() != null ? qe.getAiMarks() : 0.0))
+                    .sum();
+        }
+
+        return evaluationRepository.findBySubmission(submission)
+                .map(Evaluation::getFinalMarks)
+                .orElse(null);
     }
 
     private void requireTeacherOwnership(Classroom classroom) {
