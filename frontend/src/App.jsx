@@ -20,6 +20,9 @@ import CreateAssessmentPage  from './pages/CreateAssessmentPage';
 import TakeAssessmentPage    from './pages/TakeAssessmentPage';
 import AssessmentResultsPage from './pages/AssessmentResultsPage';
 import ExamAnalyticsPage from './pages/ExamAnalyticsPage';
+import OAuth2Callback from './pages/OAuth2Callback';
+
+
 
 function AppLayout() {
   const location = useLocation();
@@ -90,7 +93,7 @@ function AppLayout() {
 
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/login" replace />} />
-
+          <Route path="/oauth2/callback" element={<OAuth2Callback />} />
         </Routes>
       </main>
       <Toaster position="top-right" />
