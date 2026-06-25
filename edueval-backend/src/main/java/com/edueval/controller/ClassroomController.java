@@ -9,7 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import com.edueval.dto.response.StudentResponse;
 import java.util.List;
 import java.util.UUID;
 
@@ -58,4 +58,8 @@ public class ClassroomController {
     public ResponseEntity<ClassroomResponse> getClassroomById(@PathVariable UUID id) {
         return ResponseEntity.ok(classroomService.getClassroomById(id));
     }
+    @GetMapping("/api/classrooms/{id}/students")
+public ResponseEntity<List<StudentResponse>> getStudentsInClassroom(@PathVariable UUID id) {
+    return ResponseEntity.ok(classroomService.getStudentsInClassroom(id));
+}
 }
