@@ -24,4 +24,5 @@ public interface ClassroomMemberRepository extends JpaRepository<ClassroomMember
     // Count of students in a classroom
     @Query("SELECT COUNT(cm) FROM ClassroomMember cm WHERE cm.classroom = :classroom")
     long countByClassroom(Classroom classroom);
+    
 }
