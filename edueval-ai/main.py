@@ -1105,7 +1105,9 @@ def confidence_from_feedback(feedback: dict[str, Any], weighted_score: float) ->
     confidence = 0.65 + (weighted_score * 0.25) + extraction_bonus - uncertainty_penalty
     return round(max(0.35, min(0.95, confidence)), 3)
 
-
+@app.get("/")
+def root():
+    return {"status": "ok"}
 
 
 class TextEvaluationRequest(BaseModel):
