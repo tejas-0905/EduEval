@@ -36,7 +36,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
                     .name(name)
                     .email(email)
                     .passwordHash(null)
-                    .role(Role.STUDENT)
+                    .role(null)
                     .build();
             return userRepository.save(newUser);
         });
@@ -44,8 +44,8 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         String jwt = jwtUtil.generateToken(user.getEmail());
 
         String redirectUrl = isNewUser
-                ? "https://edu-eval-rho.vercel.app/oauth2/callback?token=" + jwt + "&newUser=true"
-                : "https://edu-eval-rho.vercel.app/oauth2/callback?token=" + jwt;
+        ? "https://edu-eval-rho.vercel.app/select-role?token=" + jwt
+        : "https://edu-eval-rho.vercel.app/oauth2/callback?token=" + jwt;
 
         response.sendRedirect(redirectUrl);
     }
