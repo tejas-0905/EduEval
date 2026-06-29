@@ -20,6 +20,8 @@ import CreateAssessmentPage  from './pages/CreateAssessmentPage';
 import TakeAssessmentPage    from './pages/TakeAssessmentPage';
 import AssessmentResultsPage from './pages/AssessmentResultsPage';
 import ExamAnalyticsPage from './pages/ExamAnalyticsPage';
+import OAuth2Callback from './pages/OAuth2Callback';
+import SelectRolePage from './pages/SelectRolePage';
 
 function AppLayout() {
   const location = useLocation();
@@ -87,10 +89,11 @@ function AppLayout() {
           <Route path="/student/result/:submissionId" element={
             <ProtectedRoute role="STUDENT"><ResultPage /></ProtectedRoute>
           } />
+          <Route path="/select-role" element={<SelectRolePage />} />
+          <Route path="/oauth2/callback" element={<OAuth2Callback />} />
 
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/login" replace />} />
-
         </Routes>
       </main>
       <Toaster position="top-right" />

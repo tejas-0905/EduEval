@@ -57,11 +57,11 @@
 			<scope>runtime</scope>
 		</dependency>
 
-		<!-- In-memory database for Spring context tests -->
+		<!-- In-memory database for local development and tests -->
 		<dependency>
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>
-			<scope>test</scope>
+			<scope>runtime</scope>
 		</dependency>
 
 		<!-- JWT -->
@@ -119,6 +119,15 @@
 			<scope>test</scope>
 		</dependency>
 
+		<dependency>
+			<groupId>com.cloudinary</groupId>
+			<artifactId>cloudinary-http44</artifactId>
+			<version>1.38.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-oauth2-client</artifactId>
+		</dependency>
 	</dependencies>
 
 	<build>

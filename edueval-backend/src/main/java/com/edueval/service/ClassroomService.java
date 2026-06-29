@@ -3,6 +3,7 @@ package com.edueval.service;
 import com.edueval.dto.request.CreateClassroomRequest;
 import com.edueval.dto.request.JoinClassroomRequest;
 import com.edueval.dto.response.ClassroomResponse;
+import com.edueval.dto.response.StudentResponse;
 import com.edueval.entity.Classroom;
 import com.edueval.entity.ClassroomMember;
 import com.edueval.entity.User;
@@ -152,4 +153,18 @@ public class ClassroomService {
                 c.getCreatedAt()
         );
     }
+    public List<StudentResponse> getStudentsInClassroom(UUID classroomId) {
+    Classroom classroom = classroomRepository.findById(classroomId)
+        .orElseThrow(() -> new ResourceNotFoundException("Classroom not found: " + classroomId));
+    requireTeacherOwnership(classroom);
+
+    return classroomMemberRepository.findByClassroom(classroom)
+        .stream()
+        .map(member -> new StudentResponse(
+            member.getStudent().getId(),
+            member.getStudent().getName(),
+            member.getStudent().getEmail()
+        ))
+        .toList();
+}
 }

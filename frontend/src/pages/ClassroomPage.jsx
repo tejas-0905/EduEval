@@ -16,8 +16,9 @@ export default function ClassroomPage() {
   const [classroom, setClassroom] = useState(null);
   const [exams, setExams] = useState([]);
   const [assessments, setAssessments] = useState([]);
+  const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('exams'); // 'exams' | 'assessments'
+  const [activeTab, setActiveTab] = useState('exams'); // 'exams' | 'assessments' | 'students'
   const [editingDeadlineId, setEditingDeadlineId] = useState(null);
   const [deadlineDraft, setDeadlineDraft] = useState('');
   const [savingDeadline, setSavingDeadline] = useState(false);
@@ -32,12 +33,17 @@ export default function ClassroomPage() {
       setClassroom(classRes.data);
       setExams(examRes.data);
       setAssessments(assessmentRes.data);
+
+      if (user?.role === 'TEACHER') {
+        const studentsRes = await api.get(`/api/classrooms/${id}/students`);
+        setStudents(studentsRes.data);
+      }
     } catch {
       toast.error('Failed to load classroom');
     } finally {
       setLoading(false);
     }
-  }, [id]);
+  }, [id, user?.role]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
@@ -168,9 +174,7 @@ export default function ClassroomPage() {
         >
           <FileText size={14} style={{ marginRight: '0.35rem' }} />
           Exams
-          {exams.length > 0 && (
-            <span className="tab-count">{exams.length}</span>
-          )}
+          {exams.length > 0 && <span className="tab-count">{exams.length}</span>}
         </button>
         <button
           className={`tab-btn ${activeTab === 'assessments' ? 'active' : ''}`}
@@ -178,10 +182,18 @@ export default function ClassroomPage() {
         >
           <ClipboardList size={14} style={{ marginRight: '0.35rem' }} />
           Assessments
-          {assessments.length > 0 && (
-            <span className="tab-count">{assessments.length}</span>
-          )}
+          {assessments.length > 0 && <span className="tab-count">{assessments.length}</span>}
         </button>
+        {isTeacher && (
+          <button
+            className={`tab-btn ${activeTab === 'students' ? 'active' : ''}`}
+            onClick={() => setActiveTab('students')}
+          >
+            <Users size={14} style={{ marginRight: '0.35rem' }} />
+            Students
+            {students.length > 0 && <span className="tab-count">{students.length}</span>}
+          </button>
+        )}
       </div>
 
       {/* ── Exams tab ───────────────────────────────────────────────────────── */}
@@ -430,6 +442,39 @@ export default function ClassroomPage() {
             </div>
           )}
         </>
+      )}
+
+      {/* ── Students tab ────────────────────────────────────────────────────── */}
+      {activeTab === 'students' && isTeacher && (
+        <div className="card">
+          {students.length === 0 ? (
+            <p className="field-hint" style={{ padding: '1rem 0' }}>
+              No students have joined this classroom yet.
+            </p>
+          ) : (
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
+              <thead>
+                <tr style={{ borderBottom: '1px solid var(--gray-100)', textAlign: 'left' }}>
+                  <th style={{ padding: '0.6rem 0.75rem', fontWeight: 500, color: 'var(--gray-600)' }}>#</th>
+                  <th style={{ padding: '0.6rem 0.75rem', fontWeight: 500, color: 'var(--gray-600)' }}>Name</th>
+                  <th style={{ padding: '0.6rem 0.75rem', fontWeight: 500, color: 'var(--gray-600)' }}>Email</th>
+                </tr>
+              </thead>
+              <tbody>
+                {students.map((s, i) => (
+                  <tr
+                    key={s.id}
+                    style={{ borderBottom: '1px solid var(--gray-100)' }}
+                  >
+                    <td style={{ padding: '0.6rem 0.75rem', color: 'var(--gray-400)' }}>{i + 1}</td>
+                    <td style={{ padding: '0.6rem 0.75rem' }}>{s.name}</td>
+                    <td style={{ padding: '0.6rem 0.75rem', color: 'var(--gray-400)' }}>{s.email}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
       )}
     </div>
   );
